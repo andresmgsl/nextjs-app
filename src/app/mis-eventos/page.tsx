@@ -4,8 +4,10 @@ import { dataTest } from "../../utils/my-event-data";
 
 import { redirect } from 'next/navigation'
 import { useWallet } from "@solana/wallet-adapter-react";
+import { CreateEventFeature } from "@/components/create-event-modal/create-event.feature";
 
 export default function MyEvents() {
+
   const { publicKey } = useWallet()
   if(!publicKey){
     return redirect('/')
@@ -17,20 +19,14 @@ export default function MyEvents() {
          <div className="my-16 flex flex-col items-center">
             <h1 className="text-4xl text-center font-bold">Aún no tienes eventos en Solana</h1>
             <h3 className="text-2xl text-center mt-5 mb font-bold">¡Crea tu primer evento hoy mismo!</h3>
-            <button className="bg-indigo-300 w-40 text-black mt-5 font-semibold px-4 py-1 rounded hover:text-white hover:bg-indigo-400" 
-                onClick={ () => alert("Próximamente")}>
-                  Crear Evento
-              </button>
+            <CreateEventFeature />
           </div>
        ):(
           <div>
             <div className="my-16 flex flex-col items-center">
               <h1 className="text-4xl text-center font-bold">Tus eventos en Solana</h1>
               <h3 className="text-2xl text-center mt-5 mb font-bold">¿Nuevo plan? ¡Hazlo realidad!</h3>
-              <button className="bg-indigo-300 w-40 text-black mt-5 font-semibold px-4 py-1 rounded hover:text-white hover:bg-indigo-400" 
-                  onClick={ () => alert("Próximamente")}>
-                    Crear Evento
-              </button>
+              <CreateEventFeature />
           </div>
           <div className="grid gap-4 px-10 mb-10 xl:grid-cols-3 sm:grid-cols-2">
             {dataTest.map((event, index) => (
