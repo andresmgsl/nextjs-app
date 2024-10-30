@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/event_manager.json`.
  */
 export type EventManager = {
-  "address": "8G6cTC5aKGUHT6NEfwuuqX3UTX6tt5nEtpDXgy4o9YW9",
+  "address": "CabrZvJBuKDLn8RzuQeVoekTfhZg61urr2sXtDpAWkz9",
   "metadata": {
     "name": "eventManager",
     "version": "0.1.0",

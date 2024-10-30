@@ -1,63 +1,38 @@
-import * as anchor from "@coral-xyz/anchor";
-import EventManagerIDL from "../../utils/idl-event-manager.json";
-import type { EventManager } from "../../utils/idl-event-manager";
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import {
-  AnchorWallet,
   useConnection,
   useWallet,
 } from "@solana/wallet-adapter-react";
+import { acceptedMint, getEventManagerProgram } from "@/utils/solana";
+import { EventFormInputs } from "./create-event.ui";
+import { BN } from "bn.js";
 import { PublicKey } from "@solana/web3.js";
 
-// USDC Devnet
-export const acceptedMint = new PublicKey(
-  "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
-);
-
-// Token de prueba
-// export const acceptedMint = new PublicKey(
-//   "GtScN6kB7kQ1PTzHnStbYnn5bL2rUSNMWm8eXjGxWtfj"
-// );
-
-export const EVENT_MANAGER_PROGRAM_ID = new PublicKey(EventManagerIDL.address);
-
-export function getEventManagerProgram(provider: AnchorProvider) {
-  return new Program(EventManagerIDL as EventManager, provider);
-}
-
-export function useAnchorProvider() {
+export function useCreateEvent() {
+  // get connection y wallet
   const { connection } = useConnection();
-  const wallet = useWallet();
+  const { publicKey } = useWallet();
 
-  return new AnchorProvider(connection, wallet as AnchorWallet, {
-    commitment: "confirmed",
-  });
-}
-
-export function useEventManagerProgram() {
-  const { connection } = useConnection();
-  console.log(connection.rpcEndpoint);
-  const provider = useAnchorProvider();
-  const program = getEventManagerProgram(provider);
-  const programId = EVENT_MANAGER_PROGRAM_ID;
+  // get program type
+  const program = getEventManagerProgram();
+  // define a eventID based on timestamp
   const eventId = Date.now().toString();
 
-  if (!provider.wallet.publicKey) return;
+  if (!publicKey) return;
 
-  const getProgramAccount = connection.getParsedAccountInfo(programId);
+  const getProgramAccount = connection.getParsedAccountInfo(program.programId);
 
   // find event account PDA
-  const [eventPublicKey] = anchor.web3.PublicKey.findProgramAddressSync(
+  const [eventPublicKey] = PublicKey.findProgramAddressSync(
     [
       Buffer.from(eventId, "utf-8"),
       Buffer.from("event", "utf-8"),
-      provider.wallet.publicKey.toBuffer(),
+      publicKey.toBuffer(),
     ],
     program.programId
   );
 
   // find event mint account PDA
-  const [eventMint] = anchor.web3.PublicKey.findProgramAddressSync(
+  const [eventMint] = PublicKey.findProgramAddressSync(
     [
       Buffer.from("event_mint", "utf-8"),
       eventPublicKey.toBuffer(),
@@ -66,7 +41,7 @@ export function useEventManagerProgram() {
   );
 
   // find treasury vault account PDA
-  const [treasuryVault] = anchor.web3.PublicKey.findProgramAddressSync(
+  const [treasuryVault] = PublicKey.findProgramAddressSync(
     [
       Buffer.from("treasury_vault", "utf-8"),
       eventPublicKey.toBuffer(),
@@ -75,7 +50,7 @@ export function useEventManagerProgram() {
   );
 
   // find gain vault account PDA
-  const [gainVault] = anchor.web3.PublicKey.findProgramAddressSync(
+  const [gainVault] = PublicKey.findProgramAddressSync(
     [
       Buffer.from("gain_vault", "utf-8"),
       eventPublicKey.toBuffer(),
@@ -85,8 +60,7 @@ export function useEventManagerProgram() {
 
   return {
     program,
-    provider,
-    programId,
+    publicKey,
     getProgramAccount,
     eventPublicKey,
     eventMint,
@@ -95,3 +69,40 @@ export function useEventManagerProgram() {
     eventId,
   };
 }
+
+export const handleCreateEvent = async (formData: EventFormInputs, eventProgramData: any) => {    
+  if (!eventProgramData) return;
+
+  const {
+    program,
+    publicKey,
+    eventPublicKey,
+    eventMint,
+    treasuryVault,
+    gainVault,
+    eventId
+  } = eventProgramData;
+
+  try {
+    const tx = await program.methods
+      .createEvent(eventId,formData.name, new BN(formData.price))
+      .accounts({
+        event: eventPublicKey,
+        acceptedMint: acceptedMint, // example: USDC
+        eventMint: eventMint, // sponsorship token
+        treasuryVault: treasuryVault,
+        gainVault: gainVault,
+        authority: publicKey, // event organizer
+      })
+      .rpc();
+
+      console.log('TxID: ', tx);
+
+      const eventAccount = await program.account.event.fetch(eventPublicKey);
+      console.log("Event info: ", eventAccount);
+
+  } catch(e) {
+    console.log("EL ERROR: ", e);
+  }
+
+};
