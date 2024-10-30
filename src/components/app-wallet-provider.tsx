@@ -24,6 +24,8 @@ export default function AppWalletProvider({
     const endpoint = useMemo(() => clusterApiUrl(network), [network]);
     
    
+    // const endpoint = 'http://localhost:8899';
+
     return (
       <ConnectionProvider endpoint={endpoint}>
         <WalletProvider wallets={[]} autoConnect>

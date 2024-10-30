@@ -1,8 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import EventManagerIDL from "../../utils/idl-event-manager.json";
 import type { EventManager } from "../../utils/idl-event-manager";
-import { BN } from "bn.js";
-import { AnchorProvider, Program, setProvider } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import {
   AnchorWallet,
   useConnection,
@@ -10,59 +9,15 @@ import {
 } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 
+// USDC Devnet
 export const acceptedMint = new PublicKey(
   "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
 );
 
-export function EventManagerProvider() {
-  const { connection } = useConnection();
-  const wallet = useWallet();
-
-  const provider = new AnchorProvider(connection, wallet as AnchorWallet, {
-    commitment: "confirmed",
-  });
-  setProvider(provider);
-
-  const program = getEventManagerProgram(provider);
-
-  // find event account PDA
-  const [eventPublicKey] = anchor.web3.PublicKey.findProgramAddressSync(
-    [Buffer.from("event", "utf-8"), provider.wallet.publicKey.toBuffer()],
-    program.programId
-  );
-
-  // find event mint account PDA
-  const [eventMint] = anchor.web3.PublicKey.findProgramAddressSync(
-    [Buffer.from("event_mint", "utf-8"), eventPublicKey.toBuffer()],
-    program.programId
-  );
-
-  // find treasury vault account PDA
-  const [treasuryVault] = anchor.web3.PublicKey.findProgramAddressSync(
-    [Buffer.from("treasury_vault", "utf-8"), eventPublicKey.toBuffer()],
-    program.programId
-  );
-
-  // find gain vault account PDA
-  const [gainVault] = anchor.web3.PublicKey.findProgramAddressSync(
-    [Buffer.from("gain_vault", "utf-8"), eventPublicKey.toBuffer()],
-    program.programId
-  );
-
-  const name: string = "my_event";
-  const ticketPrice = new BN(2); // 2 Accepted mint (USDC)
-
-  return {
-    program,
-    provider,
-    eventPublicKey,
-    eventMint,
-    treasuryVault,
-    gainVault,
-    name,
-    ticketPrice,
-  };
-}
+// Token de prueba
+// export const acceptedMint = new PublicKey(
+//   "GtScN6kB7kQ1PTzHnStbYnn5bL2rUSNMWm8eXjGxWtfj"
+// );
 
 export const EVENT_MANAGER_PROGRAM_ID = new PublicKey(EventManagerIDL.address);
 
@@ -105,7 +60,6 @@ export function useEventManagerProgram() {
   const [eventMint] = anchor.web3.PublicKey.findProgramAddressSync(
     [
       Buffer.from("event_mint", "utf-8"),
-      Buffer.from(eventId, "utf-8"),
       eventPublicKey.toBuffer(),
     ],
     program.programId
@@ -115,7 +69,6 @@ export function useEventManagerProgram() {
   const [treasuryVault] = anchor.web3.PublicKey.findProgramAddressSync(
     [
       Buffer.from("treasury_vault", "utf-8"),
-      Buffer.from(eventId, "utf-8"),
       eventPublicKey.toBuffer(),
     ],
     program.programId
@@ -125,7 +78,6 @@ export function useEventManagerProgram() {
   const [gainVault] = anchor.web3.PublicKey.findProgramAddressSync(
     [
       Buffer.from("gain_vault", "utf-8"),
-      Buffer.from(eventId, "utf-8"),
       eventPublicKey.toBuffer(),
     ],
     program.programId

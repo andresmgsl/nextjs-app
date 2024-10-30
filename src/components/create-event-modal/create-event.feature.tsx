@@ -26,25 +26,30 @@ export function CreateEventFeature() {
     } = data;
 
     console.log("Just a test 420", program.programId.toBase58(), eventId);
-    const tx = await program.methods
-      .createEvent(eventId,formData.name, new BN(formData.price))
-      .accounts({
-        event: eventPublicKey,
-        acceptedMint: acceptedMint, // example: USDC
-        eventMint: eventMint, // sponsorship token
-        treasuryVault: treasuryVault,
-        gainVault: gainVault,
-        authority: provider.wallet.publicKey, // event organizer
-      })
-      .rpc();
+    try {
+      const tx = await program.methods
+        .createEvent(eventId,formData.name, new BN(formData.price))
+        .accounts({
+          event: eventPublicKey,
+          acceptedMint: acceptedMint, // example: USDC
+          eventMint: eventMint, // sponsorship token
+          treasuryVault: treasuryVault,
+          gainVault: gainVault,
+          authority: provider.wallet.publicKey, // event organizer
+        })
+        .rpc();
 
-    console.log(tx);
-    // show new event info
-    const eventAccount = await program.account.event.fetch(eventPublicKey);
-    console.log("Event info: ", eventAccount);
+        console.log(tx);
+        // show new event info
+        const eventAccount = await program.account.event.fetch(eventPublicKey);
+        console.log("Event info: ", eventAccount);
+    
+    
+        setLoading(false);
+    } catch(e) {
+      console.log("EL ERROR: ", e);
+    }
 
-
-    setLoading(false);
   };
 
   return (
