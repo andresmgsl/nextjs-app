@@ -1,25 +1,20 @@
-import {
-  useConnection,
-  useWallet,
-} from "@solana/wallet-adapter-react";
-import { acceptedMint, getEventManagerProgram } from "@/utils/solana";
-import { EventFormInputs } from "./create-event.ui";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { acceptedMint, useEventManagerProgram } from "@/utils/solana";
 import { BN } from "bn.js";
 import { PublicKey } from "@solana/web3.js";
 
-export function useCreateEvent() {
+export function useCreateEvent(): {
+  createEvent: (name: string, price: number) => Promise<void>;
+} | undefined {
   // get connection y wallet
-  const { connection } = useConnection();
   const { publicKey } = useWallet();
 
   // get program type
-  const program = getEventManagerProgram();
+  const program = useEventManagerProgram();
   // define a eventID based on timestamp
   const eventId = Date.now().toString();
 
   if (!publicKey) return;
-
-  const getProgramAccount = connection.getParsedAccountInfo(program.programId);
 
   // find event account PDA
   const [eventPublicKey] = PublicKey.findProgramAddressSync(
@@ -33,76 +28,45 @@ export function useCreateEvent() {
 
   // find event mint account PDA
   const [eventMint] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from("event_mint", "utf-8"),
-      eventPublicKey.toBuffer(),
-    ],
+    [Buffer.from("event_mint", "utf-8"), eventPublicKey.toBuffer()],
     program.programId
   );
 
   // find treasury vault account PDA
   const [treasuryVault] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from("treasury_vault", "utf-8"),
-      eventPublicKey.toBuffer(),
-    ],
+    [Buffer.from("treasury_vault", "utf-8"), eventPublicKey.toBuffer()],
     program.programId
   );
 
   // find gain vault account PDA
   const [gainVault] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from("gain_vault", "utf-8"),
-      eventPublicKey.toBuffer(),
-    ],
+    [Buffer.from("gain_vault", "utf-8"), eventPublicKey.toBuffer()],
     program.programId
   );
 
-  return {
-    program,
-    publicKey,
-    getProgramAccount,
-    eventPublicKey,
-    eventMint,
-    treasuryVault,
-    gainVault,
-    eventId,
-  };
-}
+  const createEvent = async (name: string, price: number) => {
+    if (!publicKey) return;
+    try {
+      const tx = await program.methods
+        .createEvent(eventId, name, new BN(price))
+        .accounts({
+          event: eventPublicKey,
+          acceptedMint: acceptedMint, // example: USDC
+          eventMint: eventMint, // sponsorship token
+          treasuryVault: treasuryVault,
+          gainVault: gainVault,
+          authority: publicKey, // event organizer
+        })
+        .rpc();
 
-export const handleCreateEvent = async (formData: EventFormInputs, eventProgramData: any) => {    
-  if (!eventProgramData) return;
-
-  const {
-    program,
-    publicKey,
-    eventPublicKey,
-    eventMint,
-    treasuryVault,
-    gainVault,
-    eventId
-  } = eventProgramData;
-
-  try {
-    const tx = await program.methods
-      .createEvent(eventId,formData.name, new BN(formData.price))
-      .accounts({
-        event: eventPublicKey,
-        acceptedMint: acceptedMint, // example: USDC
-        eventMint: eventMint, // sponsorship token
-        treasuryVault: treasuryVault,
-        gainVault: gainVault,
-        authority: publicKey, // event organizer
-      })
-      .rpc();
-
-      console.log('TxID: ', tx);
+      console.log("TxID: ", tx);
 
       const eventAccount = await program.account.event.fetch(eventPublicKey);
       console.log("Event info: ", eventAccount);
+    } catch (e) {
+      console.log("EL ERROR: ", e);
+    }
+  };
 
-  } catch(e) {
-    console.log("EL ERROR: ", e);
-  }
-
-};
+  return {createEvent};
+}

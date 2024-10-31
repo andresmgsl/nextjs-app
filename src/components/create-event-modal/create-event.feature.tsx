@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import CreateEventModal from './create-event.ui';
-import { handleCreateEvent, useCreateEvent } from './create-event.data-access';
+import { useCreateEvent } from './create-event.data-access';
 
 export function CreateEventFeature() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const createEventData = useCreateEvent();
+  const fn = useCreateEvent();
 
   return (
     <>
@@ -21,9 +21,9 @@ export function CreateEventFeature() {
         isOpen={isModalOpen}
         loading={loading}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={(formData) => {
+        onSubmit={async (formData) => {
             setLoading(true);
-            handleCreateEvent(formData, createEventData);
+            await fn?.createEvent(formData.name, formData.price)
             setLoading(false);
             setIsModalOpen(false);
         }}
