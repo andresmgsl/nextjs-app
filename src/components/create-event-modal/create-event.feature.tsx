@@ -1,12 +1,26 @@
 import { useState } from 'react';
-import CreateEventModal from './create-event.ui';
-import { useCreateEvent } from './create-event.data-access';
+import CreateEventModal, { EventFormInputs } from './create-event.ui';
+import { createEvent } from '../../utils/create-event';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useEventManagerProgram } from "@/utils/solana";
 
 export function CreateEventFeature() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setisLoading] = useState(false);
+  const { publicKey } = useWallet();
+  const program = useEventManagerProgram();
 
-  const fn = useCreateEvent();
+  const onSubmit = async ({ name, price }: EventFormInputs) => {
+    setisLoading(!isLoading);
+    try {
+      await createEvent({ name, price, program, publicKey })
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setisLoading(!isLoading);
+      setIsModalOpen(!isModalOpen);
+    }
+  }
 
   return (
     <>
@@ -19,14 +33,9 @@ export function CreateEventFeature() {
 
       <CreateEventModal
         isOpen={isModalOpen}
-        loading={loading}
+        loading={isLoading}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={async (formData) => {
-            setLoading(true);
-            await fn?.createEvent(formData.name, formData.price)
-            setLoading(false);
-            setIsModalOpen(false);
-        }}
+        onSubmit={onSubmit}
       />
     </>
   );
