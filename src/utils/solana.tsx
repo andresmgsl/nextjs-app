@@ -11,7 +11,7 @@ import EventManagerIDL from "./idl-event-manager.json";
 
 // Token de prueba
 export const acceptedMint = new PublicKey(
-    "4EkFJjbLuR7owjVFPcMKbt5XD2KUgZ8crPr1P5cJKNx1"
+    "HZKZ4j2azejsYSDQ7fzscQepK4dbSX67Qm7aL93sfJAj"
 );
 
 const EVENT_MANAGER_PROGRAM_ID = new PublicKey(EventManagerIDL.address);
@@ -20,7 +20,7 @@ export function getEventManagerProgramId() {
     return EVENT_MANAGER_PROGRAM_ID
 }
 
-export function getEventManagerProgram() {
+export function useEventManagerProgram() {
     const { connection } = useConnection();
     const wallet = useWallet();
 

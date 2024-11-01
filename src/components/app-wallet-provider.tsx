@@ -1,6 +1,6 @@
 "use client";
  
-import React, { useMemo } from "react";
+import React from "react";
 import {
   ConnectionProvider,
   WalletProvider,
@@ -14,11 +14,8 @@ export default function AppWalletProvider({
     children,
   }: {
     children: React.ReactNode;
-  }) {
-    //const network = WalletAdapterNetwork.Devnet;
-    //const endpoint = useMemo(() => clusterApiUrl(network), [network]);
-    
-    const endpoint = 'http://localhost:8899';
+  }) {    
+    const endpoint = 'https://rpc.heavyduty.builders';
 
     return (
       <ConnectionProvider endpoint={endpoint}>
